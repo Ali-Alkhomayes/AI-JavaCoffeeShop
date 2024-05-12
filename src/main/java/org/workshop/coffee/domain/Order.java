@@ -53,24 +53,21 @@ public class Order {
     public void setOrderDate(Date orderDate) {
         this.orderDate = orderDate;
     }
-
-    public int getQuantity() {
-        int quantity = 0;
-        for (OrderLine ol : this.orderLines) {
-            quantity += ol.getQuantity();
-        }
-        return quantity;
+    private <T> T accumulateOrderLines(T identity, BiFunction<T, OrderLine, T> accumulator) {
+    T result = identity;
+    for (OrderLine orderLine : orderLines) {
+        result = accumulator.apply(result, orderLine);
     }
+    return result;
+}
 
-    public double getTotalAmount() {
-        double totalAmount = 0;
+public int getQuantity() {
+    return accumulateOrderLines(0, (subtotal, orderLine) -> subtotal + orderLine.getQuantity());
+}
 
-        for (OrderLine ol : this.orderLines) {
-            totalAmount += ol.getSubtotal();
-        }
-        return totalAmount;
-    }
-
+public double getTotalAmount() {
+    return accumulateOrderLines(0.0, (subtotal, orderLine) -> subtotal + orderLine.getSubtotal());
+}
     public void addOrderLine(OrderLine orderLine) {
         orderLine.setOrder(this);
         this.orderLines.add(orderLine);
